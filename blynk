@@ -58,7 +58,6 @@ def getter(devices):
     status = {}
     for device in devices:
         status[device] = get(device)
-
     return status
 
 
@@ -75,19 +74,19 @@ def pretty_status(statusdict):
 if __name__ == "__main__":
     *args, action = sys.argv[1:]  # last argument is action to take, others are devices
 
-    if args == ["all"]:
-        args = [device for device in devices.keys() if device not in exclude or action in ("status", "pretty")]
+    if args in (["all"], ["a"]):
+        args = [device for device in devices.keys() if device not in exclude or action[:1] in ("s", "p")]
 
-    if action == "flip":
+    if action[:1] == "f":          # flip
         apply_func(args, flip)
-    elif action == "off":
+    elif action[:2] == "of":       # off
         apply_func(args, toggle, 0)
-    elif action == "on":
+    elif action == "on":           # on
         apply_func(args, toggle, 1)
-    elif action == "only":
+    elif action[:3] == "onl":      # only
         apply_func(args, toggle, 1)
         apply_func([device for device in devices.keys() if device not in exclude and device not in args], toggle, 0)
-    elif action == "status":
+    elif action[:1] == "s":        # status
         print(getter(args) if len(args) != 1 else get(*args))
-    elif action == "pretty":
+    elif action[:1] == "p":        # pretty
         print(pretty_status(getter(args)))
