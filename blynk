@@ -83,7 +83,7 @@ if __name__ == "__main__":
         apply_func(args, toggle, 0)
     elif action == "on":           # on
         apply_func(args, toggle, 1)
-    elif action[:3] == "onl":      # only
+    elif action[:1] == "j":        # just
         apply_func(args, toggle, 1)
         apply_func([device for device in devices.keys() if device not in exclude and device not in args], toggle, 0)
     elif action[:1] == "s":        # status
