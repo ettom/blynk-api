@@ -1,4 +1,5 @@
 #!/usr/bin/env python3.7
+"""Small python script to interact with the blynk HTTP api."""
 import sys
 from urllib.request import Request, urlopen
 
@@ -46,9 +47,10 @@ def flip(device):
 
 
 def apply_func(devices, func, *args):
-    """Given a function as an argument, apply function to all given devices
+    """Given a function as an argument, apply function to all given devices.
 
-    Extra arguments, if given, are passed to the function."""
+    Extra arguments, if given, are passed to the function.
+    """
     for device in devices:
         func(device, *args)
 
