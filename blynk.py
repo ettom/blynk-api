@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.7
 """Small python script to interact with the blynk HTTP api."""
 import sys
-from urllib.request import Request, urlopen
+import requests
 
 # If you are hosting your own blynk-server, add the url here.
 
@@ -28,16 +28,15 @@ def toggle(device, value):
     """Toggle a device to required state."""
     value = value ^ devices[device][2]
     pin, auth_token = devices[device][0], devices[device][1]
-    request = Request(f"{server}/{auth_token}/update/{pin}?value={value}")
-    urlopen(request).read()
+    requests.get(f"{server}/{auth_token}/update/{pin}?value={value}")
 
 
 def get(device):
     """Get device state."""
     pin, auth_token = devices[device][0], devices[device][1]
-    request = Request(f"{server}/{auth_token}/get/{pin}")
-    response_body = urlopen(request).read()
-    state = int(float(response_body.decode("utf-8").strip("\"[]\'")))
+    r = requests.get(f"{server}/{auth_token}/get/{pin}")
+    state = int(float(r.json()[0]))
+
     return state if state not in (0, 1) else state ^ devices[device][2]
 
 
@@ -60,6 +59,7 @@ def getter(devices):
     status = {}
     for device in devices:
         status[device] = get(device)
+
     return status
 
 
