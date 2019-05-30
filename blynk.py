@@ -89,6 +89,11 @@ if __name__ == "__main__":
         apply_func(args, toggle, 1)
         apply_func([device for device in devices.keys() if device not in exclude and device not in args], toggle, 0)
     elif action[:1] == "s":        # status
-        print(getter(args) if len(args) != 1 else get(*args))
+        if len(args) != 1:
+            print(getter(args))
+        else:
+            status = get(*args)
+            print(status)
+            sys.exit(int(status))
     elif action[:1] == "p":        # pretty
         print(pretty_status(getter(args)))
