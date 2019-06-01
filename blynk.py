@@ -94,6 +94,7 @@ if __name__ == "__main__":
         else:
             status = get(*args)
             print(status)
-            sys.exit(int(status))
+            exitcode = status if status in (0, 1) else 0
+            sys.exit(exitcode)
     elif action[:1] == "p":        # pretty
         print(pretty_status(getter(args)))
