@@ -92,9 +92,4 @@ if __name__ == "__main__":
     elif action[:1] == "p":        # print
         print(print_status(args))
     elif action[:1] == "s":        # status
-        if len(args) != 1:
-            print(get_status_as_dict(args))
-        else:
-            status = get_state(*args)
-            print(status)
-            sys.exit(status if status in (0, 1) else 0)
+        print(get_status_as_dict(args) if len(args) != 1 else get(*args))
