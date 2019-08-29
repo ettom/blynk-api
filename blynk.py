@@ -37,7 +37,7 @@ def get(device):
     r = requests.get(f"{server}/{auth_token}/get/{pin}")
     state = int(float(r.json()[0]))
 
-    return state if state not in (0, 1) else state ^ devices[device][2]
+    return state if state not in (0, 1) else int(device not in exclude and state ^ devices[device][2])
 
 
 def flip(device):
@@ -45,7 +45,7 @@ def flip(device):
     toggle(device, get(device) ^ 1)
 
 
-def apply_func(devices, func, *args):
+def apply_function(devices, func, *args):
     """Given a function as an argument, apply function to all given devices.
 
     Extra arguments, if given, are passed to the function.
@@ -54,7 +54,7 @@ def apply_func(devices, func, *args):
         func(device, *args)
 
 
-def getter(devices):
+def get_status_as_dict(devices):
     """Return status of given devices in dict format."""
     status = {}
     for device in devices:
@@ -63,8 +63,9 @@ def getter(devices):
     return status
 
 
-def pretty_status(statusdict):
-    """Prettyprint status of all devices."""
+def print_status(devices):
+    """Prettyprint status of devices."""
+    statusdict = get_status_as_dict(args)
     table = ""
     maxlen = max(len(x) for x in statusdict) + 1
     for device, status in statusdict.items():
@@ -80,21 +81,21 @@ if __name__ == "__main__":
         args = [device for device in devices.keys() if device not in exclude or action[:1] in ("s", "p")]
 
     if action[:1] == "f":          # flip
-        apply_func(args, flip)
+        apply_function(args, flip)
     elif action[:2] == "of":       # off
-        apply_func(args, toggle, 0)
+        apply_function(args, toggle, 0)
     elif action == "on":           # on
-        apply_func(args, toggle, 1)
+        apply_function(args, toggle, 1)
     elif action[:1] == "j":        # just
-        apply_func(args, toggle, 1)
-        apply_func([device for device in devices.keys() if device not in exclude and device not in args], toggle, 0)
+        apply_function(args, toggle, 1)
+        apply_function([device for device in devices.keys() if device not in exclude and device not in args], toggle, 0)
+    elif action[:1] == "p":        # pretty
+        print(print_status(args))
     elif action[:1] == "s":        # status
         if len(args) != 1:
-            print(getter(args))
+            print(get_status_as_dict(args))
         else:
             status = get(*args)
             print(status)
             exitcode = status if status in (0, 1) else 0
-            sys.exit(exitcode)
-    elif action[:1] == "p":        # pretty
-        print(pretty_status(getter(args)))
+    sys.exit(exitcode)
