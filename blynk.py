@@ -15,8 +15,8 @@ server = "http://blynk-cloud.com"
 devices = {"<device name>": ("<pin>", "<auth_token>", "<default_state>"),
            "bedroom_light": ("V3", "<auth_token>", 0),
            "kitchen_light": ("d2", "<auth_token>", 1),
-           "temperature": ("V6", "<auth_token>"),
-           "humidity": ("V5", "<auth_token>")}
+           "temperature":   ("V6", "<auth_token>"),
+           "humidity":      ("V5", "<auth_token>")}
 
 
 # Add the names of devices that are not supposed to be toggled on/off here.
@@ -92,4 +92,4 @@ if __name__ == "__main__":
     elif action[:1] == "p":        # print
         print(print_status(args))
     elif action[:1] == "s":        # status
-        print(get_status_as_dict(args) if len(args) != 1 else get(*args))
+        print(get_status_as_dict(args) if len(args) != 1 else get_state(*args))
