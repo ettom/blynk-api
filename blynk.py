@@ -12,16 +12,20 @@ server = "http://blynk-cloud.com"
 # change the <default state> field in the tuple for that device from 0 to 1.
 # This might happen if your relays are wired as normally closed.
 
-devices = {"<device name>": ("<pin>", "<auth_token>", "<default_state>"),
-           "bedroom_light": ("V3", "<auth_token>", 0),
-           "kitchen_light": ("d2", "<auth_token>", 1),
+devices = {"<device name>": ("<pin>", "<auth_token>", "<default_state>", "<group>"),
+           "bedroom_light": ("V3", "<auth_token>", 0, "bedroom"),
+           "kitchen_light": ("d2", "<auth_token>", 1, "kitchen"),
            "temperature":   ("V6", "<auth_token>"),
            "humidity":      ("V5", "<auth_token>")}
 
 
 # Add the names of devices that are not supposed to be toggled on/off here.
-
+# If a device is not listed here it must have a 0/1 in its <default_state> field.
 exclude = ("temperature", "humidity")
+
+# Add the names of device groups/rooms here. All devices that have the name of
+# the group as the last field in their tuple will respond.
+groups = ("bedroom", "kitchen")
 
 
 def set_to_state(device, value):
@@ -77,8 +81,10 @@ def print_status(devices):
 if __name__ == "__main__":
     *args, action = sys.argv[1:]   # last argument is action to take, others are devices
 
-    if args in (["all"], ["a"]):
+    if args[0] in ("all", "a"):
         args = [device for device in devices.keys() if device not in exclude or action[:1] in ("s", "p")]
+    elif args[0] in groups:
+        args = [device for device in devices.keys() if args[0] in devices[device]]
 
     if action[:1] == "f":          # flip
         apply_function(args, flip_state)
