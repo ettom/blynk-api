@@ -12,11 +12,11 @@ server = "http://blynk-cloud.com"
 # change the <default state> field in the tuple for that device from 0 to 1.
 # This might happen if your relays are wired as normally closed.
 
-devices = {"<device name>": ("<pin>", "<auth_token>", "<default_state>", "<group>"),
-           "bedroom_light": ("V3", "<auth_token>", 0, "bedroom"),
-           "kitchen_light": ("d2", "<auth_token>", 1, "kitchen"),
-           "temperature":   ("V6", "<auth_token>"),
-           "humidity":      ("V5", "<auth_token>")}
+all_devices = {"<device name>": ("<pin>", "<auth_token>", "<default_state>", "<group>"),
+               "bedroom_light": ("V3", "<auth_token>", 0, "bedroom"),
+               "kitchen_light": ("d2", "<auth_token>", 1, "kitchen"),
+               "temperature":   ("V6", "<auth_token>"),
+               "humidity":      ("V5", "<auth_token>")}
 
 
 # Add the names of devices that are not supposed to be toggled on/off here.
@@ -30,18 +30,18 @@ groups = ("bedroom", "kitchen")
 
 def set_to_state(device, value):
     """Set a device to the required state."""
-    value = value ^ devices[device][2]
-    pin, auth_token = devices[device][0], devices[device][1]
+    value ^= all_devices[device][2]
+    pin, auth_token = all_devices[device][0], all_devices[device][1]
     requests.get(f"{server}/{auth_token}/update/{pin}?value={value}")
 
 
 def get_state(device):
     """Get device state."""
-    pin, auth_token = devices[device][0], devices[device][1]
+    pin, auth_token = all_devices[device][0], all_devices[device][1]
     r = requests.get(f"{server}/{auth_token}/get/{pin}")
     state = int(float(r.json()[0]))
 
-    return state if state not in (0, 1) else int(device not in exclude and state ^ devices[device][2])
+    return state if state not in (0, 1) else int(device not in exclude and state ^ all_devices[device][2])
 
 
 def flip_state(device):
@@ -69,7 +69,7 @@ def get_status_as_dict(devices):
 
 def print_status(devices):
     """Prettyprint status of devices."""
-    status_dict = get_status_as_dict(args)
+    status_dict = get_status_as_dict(devices)
     table = ""
     max_len = max(len(x) for x in status_dict) + 1
     for device, status in status_dict.items():
@@ -78,14 +78,23 @@ def print_status(devices):
     return table
 
 
-if __name__ == "__main__":
-    *args, action = sys.argv[1:]   # last argument is action to take, others are devices
-
+def choose_devices(action, *args):
+    """Choose which devices to modify."""
     if args[0] in ("all", "a"):
-        args = [device for device in devices.keys() if device not in exclude or action[:1] in ("s", "p")]
+        devices_to_modify = [device for device in all_devices.keys()
+                             if device not in exclude
+                             or action[:1] in ("s", "p")]
     elif args[0] in groups:
-        args = [device for device in devices.keys() if args[0] in devices[device]]
+        devices_to_modify = [device for device in all_devices.keys()
+                             if args[0] in all_devices[device]]
+    else:
+        devices_to_modify = args
 
+    return devices_to_modify
+
+
+def take_action(action, *args):
+    """Take action on given devices."""
     if action[:1] == "f":          # flip
         apply_function(args, flip_state)
     elif action[:2] == "of":       # off
@@ -94,8 +103,20 @@ if __name__ == "__main__":
         apply_function(args, set_to_state, 1)
     elif action[:1] == "j":        # just
         apply_function(args, set_to_state, 1)
-        apply_function([device for device in devices.keys() if device not in exclude and device not in args], set_to_state, 0)
+        devices_to_turn_off = [device for device in all_devices.keys()
+                               if device not in exclude
+                               and all_devices[device][-1] in [all_devices[device][-1] for device in args]
+                               and device not in args]
+        apply_function(devices_to_turn_off, set_to_state, 0)
     elif action[:1] == "p":        # print
         print(print_status(args))
     elif action[:1] == "s":        # status
         print(get_status_as_dict(args) if len(args) != 1 else get_state(*args))
+
+
+if __name__ == "__main__":
+    # last argument is action to take, others are devices to modiy
+    *args, action = sys.argv[1:]
+
+    devices_to_modify = choose_devices(action, *args)
+    take_action(action, *devices_to_modify)
