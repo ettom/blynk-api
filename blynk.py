@@ -39,7 +39,9 @@ def get_state(device):
     """Get device state."""
     pin, auth_token = all_devices[device][0], all_devices[device][1]
     r = requests.get(f"{server}/{auth_token}/get/{pin}")
-    state = int(float(r.json()[0]))
+    state = float(r.json()[0])
+    if state.is_integer():
+        state = int(state)
 
     return state if state not in (0, 1) else int(device not in exclude and state ^ all_devices[device][2])
 
