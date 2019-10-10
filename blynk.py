@@ -114,6 +114,8 @@ def take_action(action, *args):
         print(print_status(args))
     elif action[:1] == "s":        # status
         print(get_status_as_dict(args) if len(args) != 1 else get_state(*args))
+    else:                           # set
+        apply_function(args, set_to_state, int(action))
 
 
 if __name__ == "__main__":
