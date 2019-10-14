@@ -30,7 +30,10 @@ groups = ("bedroom", "kitchen")
 
 def set_to_state(device, value):
     """Set a device to the required state."""
-    value ^= all_devices[device][2]
+    value = float(value)
+    if value.is_integer():
+        value = int(value)
+        value ^= all_devices[device][2]
     pin, auth_token = all_devices[device][0], all_devices[device][1]
     requests.get(f"{server}/{auth_token}/update/{pin}?value={value}")
 
@@ -43,7 +46,7 @@ def get_state(device):
     if state.is_integer():
         state = int(state)
 
-    return state if state not in (0, 1) else int(device not in exclude and state ^ all_devices[device][2])
+    return state if state not in (0, 1) or device in exclude else int(state ^ all_devices[device][2])
 
 
 def flip_state(device):
@@ -88,7 +91,10 @@ def choose_devices(action, *args):
                              or action[:1] in ("s", "p")]
     elif args[0] in groups:
         devices_to_modify = [device for device in all_devices.keys()
-                             if args[0] in all_devices[device]]
+                             if args[0] in all_devices[device]
+                             if device not in exclude
+                             or action[:1] in ("s", "p")]
+
     else:
         devices_to_modify = args
 
@@ -114,8 +120,9 @@ def take_action(action, *args):
         print(print_status(args))
     elif action[:1] == "s":        # status
         print(get_status_as_dict(args) if len(args) != 1 else get_state(*args))
-    else:                           # set
-        apply_function(args, set_to_state, int(action))
+    else:                          # set
+        action = float(action)
+        apply_function(args, set_to_state, action)
 
 
 if __name__ == "__main__":
