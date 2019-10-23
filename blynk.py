@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.7
+#!/usr/bin/env python3
 """Small python script to interact with the blynk HTTP api."""
 import sys
 import requests
