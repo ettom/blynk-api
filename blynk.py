@@ -28,12 +28,17 @@ exclude = ("temperature", "humidity")
 groups = ("bedroom", "kitchen")
 
 
-def set_to_state(device, value):
-    """Set a device to the required state."""
+def process_pin_value(value, default_state=0):
+    """Modify a pin value according to it's default state."""
     value = float(value)
     if value.is_integer():
-        value = int(value)
-        value ^= all_devices[device][2]
+        value = int(value) ^ default_state
+    return value
+
+
+def set_to_state(device, value):
+    """Set a device to the required state."""
+    value = process_pin_value(value, all_devices[device][2])
     pin, auth_token = all_devices[device][0], all_devices[device][1]
     requests.get(f"{server}/{auth_token}/update/{pin}?value={value}")
 
@@ -42,11 +47,9 @@ def get_state(device):
     """Get device state."""
     pin, auth_token = all_devices[device][0], all_devices[device][1]
     r = requests.get(f"{server}/{auth_token}/get/{pin}")
-    state = float(r.json()[0])
-    if state.is_integer():
-        state = int(state)
+    state = process_pin_value(r.json()[0])
 
-    return state if state not in (0, 1) or device in exclude else int(state ^ all_devices[device][2])
+    return state if state not in (0, 1) or device in exclude else process_pin_value(state, all_devices[device][2])
 
 
 def flip_state(device):
@@ -94,7 +97,6 @@ def choose_devices(action, *args):
                              if args[0] in all_devices[device]
                              if device not in exclude
                              or action[:1] in ("s", "p")]
-
     else:
         devices_to_modify = args
 
