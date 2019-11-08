@@ -3,6 +3,19 @@
 import sys
 import requests
 
+help = """Usage: blynk.py [DEVICE(S)] [ACTION]
+
+Small python script to interact with the blynk HTTP api.
+
+Actions:
+  on         Turn the device(s) on
+  of(f)      Turn the device(s) off
+  f(lip)     Flip the device(s)
+  j(ust)     Turn the device(s) on and turn off every other device in the same group
+  p(rint)    Print the status of the device(s) as a table
+  s(tatus)   Print the status of the device(s) in dict/json format
+  any int/float for setting a pin to an arbitrary value"""
+
 # If you are hosting your own blynk-server, add the url here.
 
 server = "http://blynk-cloud.com"
@@ -128,8 +141,10 @@ def take_action(action, *args):
 
 
 if __name__ == "__main__":
-    # last argument is action to take, others are devices to modiy
-    *args, action = sys.argv[1:]
+    if len(sys.argv) < 3:
+        print(help)
+    else:
+        *args, action = sys.argv[1:]
 
-    devices_to_modify = choose_devices(action, *args)
-    take_action(action, *devices_to_modify)
+        devices_to_modify = choose_devices(action, *args)
+        take_action(action, *devices_to_modify)
