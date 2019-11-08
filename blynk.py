@@ -22,26 +22,26 @@ server = "http://blynk-cloud.com"
 
 # Configure your devices here.
 # If your devices are wired so that a pin value of LOW is the "on" state,
-# change the <default state> field in the tuple for that device from 0 to 1.
+# change the "default" field in the dict for that device from 0 to 1.
 # This might happen if your relays are wired as normally closed.
 
-all_devices = {"<device name>": ("<pin>", "<auth_token>", "<default_state>", "<group>"),
-               "bedroom_light": ("V3", "<auth_token>", 0, "bedroom"),
-               "kitchen_light": ("d2", "<auth_token>", 1, "kitchen"),
-               "temperature":   ("V6", "<auth_token>"),
-               "humidity":      ("V5", "<auth_token>")}
+all_devices = {
+    "bedroom_light": {"pin": "V3", "auth": "<auth_token>", "default":  0, "group": "bedroom"},
+    "kitchen_light": {"pin": "d2", "auth": "<auth_token>", "default":  1, "group": "kitchen"},
+    "temperature":   {"pin": "V6", "auth": "<auth_token>"},
+    "humidity":      {"pin": "V5", "auth": "<auth_token>"}}
 
 
 # Add the names of devices that are not supposed to be toggled on/off here.
-# If a device is not listed here it must have a 0/1 in its <default_state> field.
+# If a device is not listed here it must have a 0/1 in its "default" field.
 exclude = ("temperature", "humidity")
 
 # Add the names of device groups/rooms here. All devices that have the name of
-# the group as the last field in their tuple will respond.
+# the group in the corresponding field will respond
 groups = ("bedroom", "kitchen")
 
 
-def process_pin_value(value, default_state=0):
+def process_pin(value, default_state=0):
     """Modify a pin value according to it's default state."""
     value = float(value)
     if value.is_integer():
@@ -51,18 +51,19 @@ def process_pin_value(value, default_state=0):
 
 def set_to_state(device, value):
     """Set a device to the required state."""
-    value = process_pin_value(value, all_devices[device][2])
-    pin, auth_token = all_devices[device][0], all_devices[device][1]
+    value = process_pin(value, all_devices[device]["default"])
+    pin, auth_token = all_devices[device]["pin"], all_devices[device]["auth"]
     requests.get(f"{server}/{auth_token}/update/{pin}?value={value}")
 
 
 def get_state(device):
     """Get device state."""
-    pin, auth_token = all_devices[device][0], all_devices[device][1]
+    pin, auth_token = all_devices[device]["pin"], all_devices[device]["auth"]
     r = requests.get(f"{server}/{auth_token}/get/{pin}")
-    state = process_pin_value(r.json()[0])
+    state = process_pin(r.json()[0])
 
-    return state if state not in (0, 1) or device in exclude else process_pin_value(state, all_devices[device][2])
+    return (state if state not in (0, 1) or device in exclude
+            else process_pin(state, all_devices[device]["default"]))
 
 
 def flip_state(device):
@@ -107,7 +108,7 @@ def choose_devices(action, *args):
                              or action[:1] in ("s", "p")]
     elif args[0] in groups:
         devices_to_modify = [device for device in all_devices.keys()
-                             if args[0] in all_devices[device]
+                             if args[0] == all_devices[device].get("group")
                              if device not in exclude
                              or action[:1] in ("s", "p")]
     else:
@@ -128,7 +129,7 @@ def take_action(action, *args):
         apply_function(args, set_to_state, 1)
         devices_to_turn_off = [device for device in all_devices.keys()
                                if device not in exclude
-                               and all_devices[device][-1] in [all_devices[device][-1] for device in args]
+                               and all_devices[device]["group"] in [all_devices[device]["group"] for device in args]
                                and device not in args]
         apply_function(devices_to_turn_off, set_to_state, 0)
     elif action[:1] == "p":        # print
