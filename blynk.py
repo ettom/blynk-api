@@ -42,7 +42,7 @@ groups = ("bedroom", "kitchen")
 
 
 def process_pin(value, default_state=0):
-    """Modify a pin value according to it's default state."""
+    """Modify a pin value according to its default state."""
     value = float(value)
     if value.is_integer():
         value = int(value) ^ default_state
