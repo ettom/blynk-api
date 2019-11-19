@@ -103,18 +103,15 @@ def print_status(devices):
 def choose_devices(action, *args):
     """Choose which devices to modify."""
     if args[0] in ("all", "a"):
-        devices_to_modify = [device for device in all_devices.keys()
-                             if device not in exclude
-                             or action[:1] in ("s", "p")]
+        devices_to_modify = filter(lambda x: x not in exclude
+                                   or action[:1] in ("s", "p"), all_devices.keys())
     elif args[0] in groups:
-        devices_to_modify = [device for device in all_devices.keys()
-                             if args[0] == all_devices[device].get("group")
-                             if device not in exclude
-                             or action[:1] in ("s", "p")]
+        devices_to_modify = filter(lambda x: args[0] == all_devices[x].get("group")
+                                   and (x not in exclude or action[:1] in ("s", "p")), all_devices.keys())
     else:
         devices_to_modify = args
 
-    return devices_to_modify
+    return list(devices_to_modify)
 
 
 def take_action(action, *args):
