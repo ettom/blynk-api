@@ -3,19 +3,6 @@
 import sys
 import requests
 
-help = """Usage: blynk.py [DEVICE(S)] [ACTION]
-
-Small python script to interact with the blynk HTTP api.
-
-Actions:
-  on         Turn the device(s) on
-  of(f)      Turn the device(s) off
-  f(lip)     Flip the device(s)
-  j(ust)     Turn the device(s) on and turn off every other device in the same group
-  p(rint)    Print the status of the device(s) as a table
-  s(tatus)   Print the status of the device(s) in dict/json format
-  any int/float for setting a pin to an arbitrary value"""
-
 # If you are hosting your own blynk-server, add the url here.
 
 server = "http://blynk-cloud.com"
@@ -39,6 +26,19 @@ exclude = ("temperature", "humidity")
 # Add the names of device groups/rooms here. All devices that have the name of
 # the group in the corresponding field will respond
 groups = ("bedroom", "kitchen")
+
+help = """Usage: blynk.py [DEVICE(S)] [ACTION]
+
+Small python script to interact with the blynk HTTP api.
+
+Actions:
+  on         Turn the device(s) on
+  of(f)      Turn the device(s) off
+  f(lip)     Flip the device(s)
+  j(ust)     Turn the device(s) on and turn off every other device in the same group
+  p(rint)    Print the status of the device(s) as a table
+  s(tatus)   Print the status of the device(s) in dict/json format
+  any int/float for setting a pin to an arbitrary value"""
 
 
 def process_pin(value, default_state=0):
