@@ -82,11 +82,7 @@ def apply_function(devices, func, *args):
 
 def get_status_as_dict(devices):
     """Return status of given devices in dict format."""
-    status = {}
-    for device in devices:
-        status[device] = get_state(device)
-
-    return status
+    return {device: get_state(device) for device in devices}
 
 
 def print_status(devices):
