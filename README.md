@@ -10,9 +10,9 @@ The `requests` library is needed for communication with the server.
 
 The general syntax for arguments is:
 
-`./blynk.py device action`
+`./blynk.py target action`
 
-where `device` can be a single device name, any combination of device names, a name of a
+where `target` can be a single device name, any combination of device names, a name of a
 group or `all` / `a` for targeting every device.
 
 The `action` part can be any of the following:

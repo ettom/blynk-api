@@ -15,8 +15,8 @@ server = "http://blynk-cloud.com"
 all_devices = {
     "bedroom_light": {"pin": "V3", "auth": "<auth_token>", "default":  0, "group": "bedroom"},
     "kitchen_light": {"pin": "d2", "auth": "<auth_token>", "default":  1, "group": "kitchen"},
-    "temperature":   {"pin": "V6", "auth": "<auth_token>"},
-    "humidity":      {"pin": "V5", "auth": "<auth_token>"}}
+    "temperature":   {"pin": "V6", "auth": "<auth_token>", "group": "bedroom_subgroup_1"},
+    "humidity":      {"pin": "V5", "auth": "<auth_token>", "group": "bedroom_subgroup_2"}}
 
 
 # Add the names of devices that are not supposed to be toggled on/off here.
@@ -24,10 +24,14 @@ all_devices = {
 exclude = ("temperature", "humidity")
 
 # Add the names of device groups/rooms here. All devices that have the name of
-# the group in the corresponding field will respond
-groups = ("bedroom", "kitchen")
+# the group in the corresponding field will respond. Groups can have subgroups,
+# which can have subgroups of their own and so on. Avoiding loops is up to the user.
+groups = {"bedroom": ["bedroom_subgroup_1"],
+          "bedroom_subgroup_1": ["bedroom_subgroup_2"],
+          "kitchen": []}
 
-help = """Usage: blynk.py [DEVICE(S)] [ACTION]
+
+help = """Usage: blynk.py [TARGET(S)] [ACTION]
 
 Small python script to interact with the blynk HTTP api.
 
@@ -81,7 +85,7 @@ def apply_function(devices, func, *args):
 
 
 def get_status_as_dict(devices):
-    """Return status of given devices in dict format."""
+    """Get status of given devices in dict format."""
     return {device: get_state(device) for device in devices}
 
 
@@ -96,18 +100,33 @@ def print_status(devices):
     return table
 
 
+def get_devices_in_group(group):
+    """Find every device in the given group and its subgroups, recursively."""
+    devices = list(filter(lambda x: all_devices[x].get("group") == group,
+                          all_devices.keys()))
+    for subgroup in groups[group]:
+        devices += get_devices_in_group(subgroup)
+
+    return devices
+
+
+def filter_devices(action, devices):
+    """Filter a list of devices according to the action and the list of excluded devices."""
+    return list(filter(lambda x: x not in exclude
+                       or action[:1] in ("s", "p"), devices))
+
+
 def choose_devices(action, *args):
     """Choose which devices to modify."""
     if args[0] in ("all", "a"):
-        devices_to_modify = filter(lambda x: x not in exclude
-                                   or action[:1] in ("s", "p"), all_devices.keys())
+        devices_to_modify = filter_devices(action, all_devices.keys())
     elif args[0] in groups:
-        devices_to_modify = filter(lambda x: args[0] == all_devices[x].get("group")
-                                   and (x not in exclude or action[:1] in ("s", "p")), all_devices.keys())
+        devices_to_modify = filter_devices(
+            action, get_devices_in_group(args[0]))
     else:
-        devices_to_modify = args
+        devices_to_modify = list(args)
 
-    return list(devices_to_modify)
+    return devices_to_modify
 
 
 def take_action(action, *args):
