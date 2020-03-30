@@ -3,7 +3,7 @@
 import sys
 import requests
 
-# If you are hosting your own blynk-server, add the url here.
+# If you are hosting your own blynk-server, change the url here.
 
 server = "http://blynk-cloud.com"
 

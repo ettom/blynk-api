@@ -1,4 +1,4 @@
-# blynk-lightswitch
+# blynk-cli
 Small python script to interact with the blynk HTTP api.
 
 ## Requirements
