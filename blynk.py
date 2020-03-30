@@ -2,6 +2,7 @@
 """Small python script to interact with the blynk HTTP api."""
 import sys
 import requests
+import itertools
 
 # If you are hosting your own blynk-server, change the url here.
 
@@ -94,7 +95,7 @@ def print_status(devices):
     table = ""
     max_len = max(len(x) for x in status_dict) + 1
     for device, status in status_dict.items():
-        table += f"{device: <{max_len}}: {status: <{3}} \n"
+        table += f"{device: <{max_len}}: {status: <{3}}\n"
     table = table[:-1:]
     return table
 
@@ -111,45 +112,41 @@ def get_devices_in_group(group):
 
 def filter_devices(action, devices):
     """Filter a list of devices according to the action and the list of excluded devices."""
-    return list(filter(lambda x: x not in exclude
-                       or action[:1] in ("s", "p"), devices))
+    return list(filter(lambda x: x not in exclude or action[:1] in ("s", "p"), devices))
 
 
-def choose_devices(action, *args):
+def choose_devices(action, devices):
     """Choose which devices to modify."""
-    if args[0] in ("all", "a"):
-        devices_to_modify = filter_devices(action, all_devices.keys())
-    elif args[0] in groups:
-        devices_to_modify = filter_devices(
-            action, get_devices_in_group(args[0]))
+    if len({"all", "al", "a"} & set(devices)) > 0:
+        return filter_devices(action, all_devices.keys())
     else:
-        devices_to_modify = list(args)
+        return list(itertools.chain(
+            *map(lambda x: filter_devices(action, get_devices_in_group(x)) if x in groups else [x], devices)))
 
-    return devices_to_modify
 
-
-def take_action(action, *args):
+def take_action(action, devices):
     """Take action on given devices."""
     if action[:1] == "f":          # flip
-        apply_function(args, flip_state)
+        apply_function(devices, flip_state)
     elif action[:2] == "of":       # off
-        apply_function(args, set_to_state, 0)
+        apply_function(devices, set_to_state, 0)
     elif action == "on":           # on
-        apply_function(args, set_to_state, 1)
+        apply_function(devices, set_to_state, 1)
     elif action[:1] == "j":        # just
-        apply_function(args, set_to_state, 1)
-        devices_to_turn_off = [device for device in all_devices.keys()
-                               if device not in exclude
-                               and all_devices[device]["group"] in [all_devices[device]["group"] for device in args]
-                               and device not in args]
+        groups_to_modify = map(lambda x: get_devices_in_group(all_devices[x]["group"]), devices)
+        devices_to_turn_off = [device for device in list(itertools.chain(*groups_to_modify))
+                               if device not in devices
+                               and device not in exclude]
+
         apply_function(devices_to_turn_off, set_to_state, 0)
+        apply_function(devices, set_to_state, 1)
     elif action[:1] == "p":        # print
-        print(print_status(args))
+        print(print_status(devices))
     elif action[:1] == "s":        # status
-        print(get_status_as_dict(args) if len(args) != 1 else get_state(*args))
+        print(get_status_as_dict(devices) if len(devices) != 1 else get_state(*devices))
     else:                          # set
         action = float(action)
-        apply_function(args, set_to_state, action)
+        apply_function(devices, set_to_state, action)
 
 
 if __name__ == "__main__":
@@ -158,5 +155,5 @@ if __name__ == "__main__":
     else:
         *args, action = sys.argv[1:]
 
-        devices_to_modify = choose_devices(action, *args)
-        take_action(action, *devices_to_modify)
+        devices_to_modify = choose_devices(action, args)
+        take_action(action, devices_to_modify)
