@@ -11,7 +11,6 @@ server = "http://blynk-cloud.com"
 # If your devices are wired so that a pin value of LOW is the "on" state,
 # change the "default" field in the dict for that device from 0 to 1.
 # This might happen if your relays are wired as normally closed.
-
 all_devices = {
     "bedroom_light": {"pin": "V3", "auth": "<auth_token>", "default":  0, "group": "bedroom"},
     "kitchen_light": {"pin": "d2", "auth": "<auth_token>", "default":  1, "group": "kitchen"},
@@ -20,6 +19,8 @@ all_devices = {
 
 
 # Add the names of devices that are not supposed to be toggled on/off here.
+# If a device is listed here, it will only respond to state-changing commands
+# if the device is explicitly specified. It will not respond to e.g 'all flip'.
 # If a device is not listed here it must have a 0/1 in its "default" field.
 exclude = ("temperature", "humidity")
 
@@ -64,10 +65,8 @@ def get_state(device):
     """Get device state."""
     pin, auth_token = all_devices[device]["pin"], all_devices[device]["auth"]
     r = requests.get(f"{server}/{auth_token}/get/{pin}")
-    state = process_pin(r.json()[0])
-
-    return (state if state not in (0, 1) or device in exclude
-            else process_pin(state, all_devices[device]["default"]))
+    default_state = all_devices[device]["default"] if "default" in all_devices[device] else 0
+    return process_pin(r.json()[0], default_state)
 
 
 def flip_state(device):
