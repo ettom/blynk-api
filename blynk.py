@@ -3,6 +3,7 @@
 import sys
 import requests
 import itertools
+import json
 
 # If you are hosting your own blynk-server, change the url here.
 
@@ -143,7 +144,7 @@ def take_action(action, devices):
     elif action[:1] == "p":        # print
         print(print_status(devices))
     elif action[:1] == "s":        # status
-        print(get_status_as_dict(devices) if len(devices) != 1 else get_state(*devices))
+        print(json.dumps(get_status_as_dict(devices)) if len(devices) != 1 else get_state(*devices))
     else:                          # set
         action = float(action)
         apply_function(devices, set_to_state, action)
