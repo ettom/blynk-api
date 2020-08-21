@@ -50,9 +50,13 @@ Actions:
 
 def process_pin(value, default_state=0):
     """Modify a pin value according to its default state."""
-    value = float(value)
-    if value.is_integer():
-        value = int(value) ^ default_state
+    try:
+        value = float(value)
+        if value.is_integer():
+            value = int(value) ^ default_state
+    except ValueError:
+        pass
+
     return value
 
 
